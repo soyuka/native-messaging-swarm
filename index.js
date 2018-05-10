@@ -8,30 +8,30 @@ const archive = hyperdrive('./test')
 const port = new NativeEventEmitter(`${__dirname}/native.js`)
 
 archive.ready(() => {
-  archive.writeFile('/hello.txt', 'world', function (err) {
-    rep(function () {
-      // rep(() => {})
-    })
+  archive.writeFile('dat.json', JSON.stringify({url: `dat://${archive.key.toString('hex')}`, title: 'test'}), function (err) {
+    rep()
   })
 })
-
 
 port.on('error', function(err) {
   console.error('got err upstream', err)
 })
+
 function rep(cb) {
   const hexKey = archive.key.toString('hex')
   console.log(hexKey)
 
   port.on('replicate', function () {
-    const stream = archive.replicate({live: true})
+    const stream = archive.replicate({live: true, upload: true, download: true, timeout: 0})
+
+    // Should we send read instructions from the "native"?
+    // port.on('read', function (d) {
+    //   if (d.key !== hexKey) return
+    //   // port.send('read', {key: d.key, data: stream.read(d.data)})
+    // })
+
     const replicate = new Duplex({
       read(size) {
-        port.once('read', (data) => {
-          this.push(data)
-        })
-
-        port.send('read', {key: hexKey, data: size})
       },
       write(chunk, encoding, cb) {
         port.send('write', {
@@ -39,16 +39,23 @@ function rep(cb) {
           data: chunk
         })
 
-        cb()
+        port.once('writend', cb)
       }
     })
 
     replicate.pipe(stream).pipe(replicate)
 
-    stream.on('end', () => {
-      console.log('end rep')
-      cb && cb()
+    stream.on('error', (err) => {
+      console.error('err', err.message)
     })
+
+    // useful?
+    // stream.on('end', () => {
+    //   console.log('end rep')
+    //   port.send('finalize', {key: hexKey})
+    //   stream.finalize()
+    //   cb && cb()
+    // })
   })
 
   port.send('prepare', hexKey)
