@@ -1,6 +1,8 @@
 Native messaging swarm
 ======================
 
+A swarm library that would allow to replicate a dat stream thorugh tcp/udp from the browser. It uses WebExtension's native messaging protocol.
+
 ## Installation
 
 ```
