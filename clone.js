@@ -11,13 +11,9 @@ const archive = hyperdrive(function () {
 archive.ready(function () {
   const swarm = hyperdiscovery(archive)
 
-  // archive.readdir('/', function(err, d) {
-  //   console.log(d)
-  // })
-  // setTimeout(() => {
-  //   console.log('t')
-  //   archive.stat('dat.json', function (err, d) {
-  //     console.log(err, d)
-  //   })
-  // }, 2000)
+  setTimeout(() => {
+    archive.readdir('/', function (err, d) {
+      console.log(err, d)
+    })
+  }, 1000)
 })

@@ -1,15 +1,7 @@
-const runtime = require('browser.runtime')
-const hyperdrive = require('hyperdrive')
-const pump = require('pump')
-const {Duplex, PassThrough, Transform} = require('stream')
-const NativeEventEmitter = require('./eventemitter.js')
-
-const archive = hyperdrive('./test')
-const stream = archive.replicate({live: true, upload: true, download: true, timeout: 0})
-const port = runtime.connectNative(`${__dirname}/native.js`)
-
-archive.ready(() => {
+function swarm(archive, port, opts = {}) {
+  const stream = typeof opts.stream === 'function' ? opts.stream() : archive.replicate({live: true, upload: true, download: true, timeout: 0})
   const hexKey = archive.key.toString('hex')
+
   port.postMessage({key: hexKey, event: 'prepare'})
   port.onMessage.addListener((message) => {
     if (message.event === 'ready') {
@@ -29,7 +21,6 @@ archive.ready(() => {
       return
     }
   })
+}
 
-  archive.writeFile('dat.json', JSON.stringify({url: `dat://${hexKey}`, title: 'test'}), function (err) {
-  })
-})
+module.exports = swarm

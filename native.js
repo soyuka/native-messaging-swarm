@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 const {PassThrough, Transform} = require('stream')
-const {toBuf} = require('dat-encoding')
 const {NativeEncoder, NativeDecoder} = require('browser.runtime')
 const hyperdrive = require('hyperdrive')
 const swarm = require('hyperdiscovery')
@@ -34,7 +33,6 @@ const input = new Transform({
     }
 
     console.error('preparing %s', key)
-
     archives[key] = hyperdrive(() => ram(), key, {sparse: false})
     streams[key] = archives[key].replicate({live: true, upload: true, download: true, timeout: 0})
     // on data write the data to origin
@@ -48,6 +46,7 @@ const input = new Transform({
     })
 
     archives[key].ready(() => {
+      swarm(archives[key])
       output.write(JSON.stringify({key: key, event: 'ready'}))
     })
 
